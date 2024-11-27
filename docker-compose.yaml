@@ -1,0 +1,31 @@
+version: "3"
+services:
+  ui:
+    image: lowcode-demo:zz
+    container_name: ui
+    privileged: true
+    environment:
+      - TITLE=常用信息记录 # 自定义标签名
+
+        # 容器内部监听端口
+      - EDIT_PORT=3000 # 编辑模式使用的端口
+      - PREVIEW_PORT=3001 # 预览模式使用的端口
+
+      - ENABLE_EDIT=true # 是否开启编辑模式，不开启的话，可以不在ports中暴露编辑模式的端口。true or false
+      - ENABLE_PREVIEW=true # 是否开启预览模式
+
+    ports: # 外部地址加端口:内部监听端口
+      - "0.0.0.0:3000:3000"
+      - "0.0.0.0:3001:3001"
+    network_mode: "default"
+    volumes:
+      - ~/Code/UI/alibaba-lowcode/project_path/:/src/pro/ # 宿主机映射目录:容器内部映射目录（用来存放“保存到文件”后得到的两个txt文件）
+    cap_add:
+      - SYS_PTRACE
+    # entrypoint: ["tail", "-f", "/dev/null"] # 调试用
+networks:
+  default:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.60.0.0/16 # 要是和现有网络冲突了，就改一下172.x.0.0中的x的值

@@ -1,0 +1,29 @@
+From 80a8e481a68342770fa141a5ffa1b7c247be42e1 Mon Sep 17 00:00:00 2001
+From: ZhuzhuNo3 <907130054@qq.com>
+Date: Wed, 27 Nov 2024 11:16:15 +0800
+Subject: feat: https
+
+---
+ demo-general/build.json | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
+
+diff --git a/demo-general/build.json b/demo-general/build.json
+index 1d9ea4a..e523d8f 100644
+--- a/demo-general/build.json
++++ b/demo-general/build.json
+@@ -5,7 +5,11 @@
+   },
+   "vendor": false,
+   "devServer": {
+-    "hot": false
++    "hot": false,
++    "https": {
++      "key": "./server.key",
++      "cert": "./server.crt"
++    }
+   },
+   "publicPath": "/",
+   "externals": {
+-- 
+2.32.0
+

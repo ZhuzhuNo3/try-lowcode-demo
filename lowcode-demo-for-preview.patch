@@ -1,0 +1,68 @@
+From fb5920f7b6f527d47b9b358a16e9910dbca27691 Mon Sep 17 00:00:00 2001
+From: ZhuzhuNo3 <x@x.com>
+Date: Fri, 10 Nov 2023 14:25:30 +0800
+Subject: for preview
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+1. 强制主页跳转到 preview.html
+
+2. 修改 preview.tsx 使其从文件加载配置而不是从localStorage加载
+
+3. 修改 preview.html 变更浏览器的标签页图标
+---
+ demo-general-preview-only/public/index.ejs    | 3 +++
+ demo-general-preview-only/public/preview.html | 4 +++-
+ demo-general-preview-only/src/preview.tsx     | 7 ++++---
+ 3 files changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/demo-general-preview-only/public/index.ejs b/demo-general-preview-only/public/index.ejs
+index 3e4a85a..df8e1da 100644
+--- a/demo-general-preview-only/public/index.ejs
++++ b/demo-general-preview-only/public/index.ejs
+@@ -44,5 +44,8 @@
+   <body>
+     <div id="lce-container"></div>
+     <script type="text/javascript" src="./js/index.js"></script>
++    <script>
++      window.location.href='preview.html';
++    </script>
+   </body>
+ </html>
+diff --git a/demo-general-preview-only/public/preview.html b/demo-general-preview-only/public/preview.html
+index 330e024..18bd63d 100644
+--- a/demo-general-preview-only/public/preview.html
++++ b/demo-general-preview-only/public/preview.html
+@@ -3,7 +3,9 @@
+ <head>
+   <meta charset="UTF-8" />
+   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+-  <title>阿里低代码引擎 Demo - 预览页</title>
++  <title>TODO</title>
++  <link rel="icon" href="logo.png" type="image/png">
++  <link rel="shortcut icon" href="logo.png" type="image/png">
+   <link href="https://g.alicdn.com/code/lib/alifd__next/1.24.18/next.min.css" rel="stylesheet">
+   <link href="./css/preview.css" rel="stylesheet">
+ </head>
+diff --git a/demo-general-preview-only/src/preview.tsx b/demo-general-preview-only/src/preview.tsx
+index 97d8c0a..f66778e 100644
+--- a/demo-general-preview-only/src/preview.tsx
++++ b/demo-general-preview-only/src/preview.tsx
+@@ -20,9 +20,10 @@ const SamplePreview = () => {
+   const [data, setData] = useState({});
+ 
+   async function init() {
+-    const scenarioName = getScenarioName();
+-    const packages = getPackagesFromLocalStorage(scenarioName);
+-    const projectSchema = getProjectSchemaFromLocalStorage(scenarioName);
++    const packagesStr = require('!!raw-loader!/src/pro/packages.txt');
++    const projectSchemaStr = require('!!raw-loader!/src/pro/projectSchema.txt');
++    const packages = JSON.parse(packagesStr.default);
++    const projectSchema = JSON.parse(projectSchemaStr.default);
+     const {
+       componentsMap: componentsMapArray,
+       componentsTree,
+-- 
+2.32.0
+

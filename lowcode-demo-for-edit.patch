@@ -1,0 +1,181 @@
+From db10136d4ae26e6e89c912cefacbc33da5500e0b Mon Sep 17 00:00:00 2001
+From: ZhuzhuNo3 <x@x.com>
+Date: Fri, 10 Nov 2023 14:13:40 +0800
+Subject: for edit
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+1. 去除两个插件 LoadIncrementalAssetsWidgetPlugin、CodeGenPlugin
+
+2. 添加从文件加载和保存的按钮
+
+3. 去除默认的端口号
+---
+ demo-general/package.json                     |  2 +-
+ demo-general/src/index.ts                     |  7 ----
+ .../src/plugins/plugin-save-sample/index.tsx  | 30 +++++++++++++++-
+ demo-general/src/services/mockService.ts      | 35 +++++++++++++++++++
+ 4 files changed, 65 insertions(+), 9 deletions(-)
+
+diff --git a/demo-general/package.json b/demo-general/package.json
+index e700840..ea1dc74 100644
+--- a/demo-general/package.json
++++ b/demo-general/package.json
+@@ -6,7 +6,7 @@
+   "license": "MIT",
+   "main": "index.js",
+   "scripts": {
+-    "start": "build-scripts start --disable-reload --port 5556",
++    "start": "build-scripts start --disable-reload",
+     "build": "build-scripts build",
+     "prepublishOnly": "npm run build",
+     "pub": "node ./scripts/watchdog.js && npm pub"
+diff --git a/demo-general/src/index.ts b/demo-general/src/index.ts
+index 729a05f..9d19812 100644
+--- a/demo-general/src/index.ts
++++ b/demo-general/src/index.ts
+@@ -3,7 +3,6 @@ import { createFetchHandler } from '@alilc/lowcode-datasource-fetch-handler'
+ import EditorInitPlugin from './plugins/plugin-editor-init';
+ import UndoRedoPlugin from '@alilc/lowcode-plugin-undo-redo';
+ import ZhEnPlugin from '@alilc/lowcode-plugin-zh-en';
+-import CodeGenPlugin from '@alilc/lowcode-plugin-code-generator';
+ import DataSourcePanePlugin from '@alilc/lowcode-plugin-datasource-pane';
+ import SchemaPlugin from '@alilc/lowcode-plugin-schema';
+ import CodeEditorPlugin from "@alilc/lowcode-plugin-code-editor";
+@@ -12,7 +11,6 @@ import InjectPlugin from '@alilc/lowcode-plugin-inject';
+ import SimulatorResizerPlugin from '@alilc/lowcode-plugin-simulator-select';
+ import ComponentPanelPlugin from '@alilc/lowcode-plugin-components-pane';
+ import DefaultSettersRegistryPlugin from './plugins/plugin-default-setters-registry';
+-import LoadIncrementalAssetsWidgetPlugin from './plugins/plugin-load-incremental-assets-widget';
+ import SaveSamplePlugin from './plugins/plugin-save-sample';
+ import PreviewSamplePlugin from './plugins/plugin-preview-sample';
+ import CustomSetterSamplePlugin from './plugins/plugin-custom-setter-sample';
+@@ -68,8 +66,6 @@ async function registerPlugins() {
+ 
+   await plugins.register(SimulatorResizerPlugin);
+ 
+-  await plugins.register(LoadIncrementalAssetsWidgetPlugin);
+-
+   // 插件参数声明 & 传递，参考：https://lowcode-engine.cn/site/docs/api/plugins#%E8%AE%BE%E7%BD%AE%E6%8F%92%E4%BB%B6%E5%8F%82%E6%95%B0%E7%89%88%E6%9C%AC%E7%A4%BA%E4%BE%8B
+   await plugins.register(DataSourcePanePlugin, {
+     importPlugins: [],
+@@ -85,9 +81,6 @@ async function registerPlugins() {
+ 
+   await plugins.register(CodeEditorPlugin);
+ 
+-  // 注册出码插件
+-  await plugins.register(CodeGenPlugin);
+-
+   await plugins.register(SaveSamplePlugin);
+ 
+   await plugins.register(PreviewSamplePlugin);
+diff --git a/demo-general/src/plugins/plugin-save-sample/index.tsx b/demo-general/src/plugins/plugin-save-sample/index.tsx
+index 8785c67..9e63247 100644
+--- a/demo-general/src/plugins/plugin-save-sample/index.tsx
++++ b/demo-general/src/plugins/plugin-save-sample/index.tsx
+@@ -3,6 +3,8 @@ import { Button } from '@alifd/next';
+ import {
+   saveSchema,
+   resetSchema,
++  saveFile,
++  loadFromFile,
+ } from '../../services/mockService';
+ 
+ // 保存功能示例
+@@ -38,6 +40,32 @@ const SaveSamplePlugin = (ctx: IPublicModelPluginContext) => {
+           </Button>
+         ),
+       });
++      skeleton.add({
++        name: 'saveFile',
++        area: 'topArea',
++        type: 'Widget',
++        props: {
++          align: 'right',
++        },
++        content: (
++          <Button onClick={() => saveFile(scenarioName)}>
++            保存到文件
++          </Button>
++        ),
++      });
++      skeleton.add({
++        name: 'loadFromFile',
++        area: 'topArea',
++        type: 'Widget',
++        props: {
++          align: 'right',
++        },
++        content: (
++          <Button onClick={() => loadFromFile(scenarioName)}>
++            从文件加载
++          </Button>
++        ),
++      });
+       hotkey.bind('command+s', (e) => {
+         e.preventDefault();
+         saveSchema(scenarioName);
+@@ -49,4 +77,4 @@ SaveSamplePlugin.pluginName = 'SaveSamplePlugin';
+ SaveSamplePlugin.meta = {
+   dependencies: ['EditorInitPlugin'],
+ };
+-export default SaveSamplePlugin;
+\ No newline at end of file
++export default SaveSamplePlugin;
+diff --git a/demo-general/src/services/mockService.ts b/demo-general/src/services/mockService.ts
+index 1bc3442..56f163a 100644
+--- a/demo-general/src/services/mockService.ts
++++ b/demo-general/src/services/mockService.ts
+@@ -4,6 +4,7 @@ import { Message, Dialog } from '@alifd/next';
+ import { IPublicTypeProjectSchema, IPublicEnumTransformStage } from '@alilc/lowcode-types';
+ import DefaultPageSchema from './defaultPageSchema.json';
+ import DefaultI18nSchema from './defaultI18nSchema.json';
++import { saveAs } from "file-saver";
+ 
+ const generateProjectSchema = (pageSchema: any, i18nSchema: any): IPublicTypeProjectSchema => {
+   return {
+@@ -47,6 +48,40 @@ export const resetSchema = async (scenarioName: string = 'unknown') => {
+   Message.success('成功重置页面');
+ }
+ 
++export const saveFile = async (scenarioName: string = 'unknown') => {
++  Message.success('即将下载 packages.txt 以及 projectSchema.txt');
++  let packagesStr = window.localStorage.getItem(getLSName(scenarioName, 'packages')) || '{}'
++  let projectSchemaStr = window.localStorage.getItem(getLSName(scenarioName)) || '{}'
++  var packagesBlob = new Blob([packagesStr], { type: "text/plain;charset=utf-8" });
++  var projectSchemaBlob = new Blob([projectSchemaStr], { type: "text/plain;charset=utf-8" });
++  await saveAs(packagesBlob, "packages.txt");
++  await saveAs(projectSchemaBlob, "projectSchema.txt");
++};
++
++export const loadFromFile = async (scenarioName: string = 'unknown') => {
++  try {
++    await new Promise<void>((resolve, reject) => {
++      Dialog.confirm({
++        content: '将在容器内部的/src/pro路径下查找配置，确定要加载吗？当前所有的修改都将消失！',
++        onOk: () => {
++          resolve();
++        },
++        onCancel: () => {
++          reject()
++        },
++      })
++    })
++  } catch(err) {
++    return;
++  }
++  const packagesStr = require('!!raw-loader!/src/pro/packages.txt');
++  const projectSchemaStr = require('!!raw-loader!/src/pro/projectSchema.txt');
++  window.localStorage.setItem(getLSName(scenarioName, 'packages'), packagesStr.default);
++  window.localStorage.setItem(getLSName(scenarioName), projectSchemaStr.default);
++  Message.success('加载成功');
++  window.location.reload();
++};
++
+ const getLSName = (scenarioName: string, ns: string = 'projectSchema') => `${scenarioName}:${ns}`;
+ 
+ export const getProjectSchemaFromLocalStorage = (scenarioName: string) => {
+-- 
+2.32.0
+
